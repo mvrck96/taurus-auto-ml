@@ -1,7 +1,7 @@
 from typing import List
 
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 from exceptions import FeaturesNotFound
 
@@ -44,7 +44,7 @@ class Preprocessor:
         )
 
     def fillna(self):
-        """Заполнение пропускрвв данных"""
+        """Заполнение пропускрвв данных, согласно типу данных."""
         cat_cols_with_na = self.categorical_features.columns[
             self.categorical_features.isna().any()
         ]
@@ -62,23 +62,41 @@ class Preprocessor:
                 mean = self.prep_df[col].mean()
                 self.prep_df[col].fillna(mean, inplace=True)
 
+    def encode(self):
+        """Кодирование категориальных признаков."""
+        encoder = LabelEncoder()
+        res = pd.DataFrame()
+        for col in self.categorical_features.columns:
+            enc_feature = encoder.fit_transform(
+                self.categorical_features[col].astype(str)
+            )
+            res[col] = list(map(int, enc_feature))
+
+        # Удаляем из рабочего дф закодированные фичи
+        self.prep_df.drop(
+            columns=self.categorical_features.columns, inplace=True
+        )
+        # Добавляем обратно обработанные
+        self.prep_df = self.prep_df.join(res).copy()
+
     def scale(self):
         """Скейлинг числовых параметров."""
         ss = StandardScaler()
+        res = ss.fit_transform(self.prep_df)
 
-        numerical_features = pd.DataFrame(
-            ss.fit_transform(self.numerical_features),
-            index=self.numerical_features.index,
-            columns=self.numerical_features.columns,
+        # Скейлим весь рабочий дф, остались только численные
+        self.prep_df = pd.DataFrame(
+            res,
+            index=self.prep_df.index,
+            columns=self.prep_df.columns,
         )
-        self.prep_df.drop(columns=numerical_features.columns, inplace=True)
-        self.prep_df = self.prep_df.join(numerical_features).copy()
 
     def run(self):
         """Запуск всего пайплайна обработки."""
         self.fillna()
+        self.encode()
         self.scale()
         if self.ignore_columns:
-            self.prep_df.join(self.df[[self.ignore_columns]])
+            self.prep_df = self.prep_df.join(self.df[[*self.ignore_columns]])
 
         return self.prep_df.join(self.df[self.target])
