@@ -99,10 +99,10 @@ class Preprocessor:
         if self.ignore_columns:
             self.prep_df = self.prep_df.join(self.df[[*self.ignore_columns]])
 
+        # Кодируем таргет после всех обработок
         self.prep_df = self.prep_df.join(self.df[self.target])
         encoder = LabelEncoder()
         self.prep_df[self.target] = encoder.fit_transform(
             self.prep_df[self.target]
         )
-
         return self.prep_df

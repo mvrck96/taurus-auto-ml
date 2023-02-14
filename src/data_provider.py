@@ -19,16 +19,16 @@ class DataProvider:
         self.data_source = data_source
         self.target = target
 
-        # Validate filetype
+        # Валидация расширени файла
         filetype = self.data_source.split(".")[-1]
         if filetype not in SUPPORTED_FILE_TYPES:
             raise FileTypeNotSupported(filetype, SUPPORTED_FILE_TYPES)
 
-        # Validate file
+        # Валидация самого файла
         self.df = DATA_SOURCES[filetype](data_source)
         df_columns = list(self.df.columns)
 
-        # Validate target
+        # Проверка таргета в файле
         if self.target not in df_columns:
             raise TargetNotFound(self.target, df_columns)
 

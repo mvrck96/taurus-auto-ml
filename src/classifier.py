@@ -5,8 +5,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import cross_val_score, train_test_split
-from sklearn.metrics import f1_score
+from sklearn.model_selection import cross_val_score
 
 from exceptions import ModelNotFoud
 from preprocessor import Preprocessor
@@ -22,7 +21,11 @@ IMPLEMENTED_MODELS = {
 
 class AutoClassifier:
     def __init__(
-        self, data_source: str, target: str, models: List[str] = ["all"]
+        self,
+        data_source: str,
+        target: str,
+        models: List[str] = ["all"],
+        ignore_columns: List[str] = None,
     ) -> None:
         """Класс для решения задачи классификации а авто режиме.
 
@@ -33,6 +36,7 @@ class AutoClassifier:
         """
         self.data_source = data_source
         self.target = target
+        self.ignore_columns = ignore_columns
         self.models = models
 
         self.data_provider = DataProvider(data_source, target)
@@ -57,15 +61,18 @@ class AutoClassifier:
         """Будет отдавать готовую модель с лучшим скором."""
         fitted_models = {key: (None, None) for key in IMPLEMENTED_MODELS.keys()}
 
-        data = self.preprocess()
+        data = self.preprocess(self.ignore_columns)
         X, y = data.drop(columns=[self.target]), data[self.target]
+
+        # Луп обучения моделей и оценки качества CV
         for model in self.models:
-            print(f"Fitting {model}")
             cls = IMPLEMENTED_MODELS[model]()
             fitted_cls = cls.fit(X, y)
             score = np.mean(
                 cross_val_score(cls, X, y, cv=3, scoring="f1", n_jobs=-1)
             )
             fitted_models[model] = (fitted_cls, score)
+
+        # Отдаем лучшую модель по скору на CV
         top_pick = sorted(fitted_models.items(), key=lambda x: x[1][1])[-1]
-        return top_pick
+        return top_pick[1]
