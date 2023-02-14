@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 import numpy as np
@@ -6,6 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import cross_val_score
+from sklearn.base import BaseEstimator
 
 from exceptions import ModelNotFoud
 from preprocessor import Preprocessor
@@ -57,7 +58,7 @@ class AutoClassifier:
         )
         return self.preprocessor.run()  # Возвращает обработанный датафрейм
 
-    def fit(self):
+    def fit(self) -> Tuple[BaseEstimator, float]:
         """Будет отдавать готовую модель с лучшим скором."""
         fitted_models = {key: (None, None) for key in IMPLEMENTED_MODELS.keys()}
 

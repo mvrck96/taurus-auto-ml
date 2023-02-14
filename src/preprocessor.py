@@ -91,7 +91,7 @@ class Preprocessor:
             columns=self.prep_df.columns,
         )
 
-    def run(self):
+    def run(self) -> pd.DataFrame:
         """Запуск всего пайплайна обработки."""
         self.fillna()
         self.encode()
