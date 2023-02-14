@@ -66,11 +66,6 @@ class AutoClassifier:
             score = np.mean(
                 cross_val_score(cls, X, y, cv=3, scoring="f1", n_jobs=-1)
             )
-            # X_train, X_test, y_train, y_test = train_test_split(
-            #     X, y, test_size=0.3, shuffle=True
-            # )
-            # fitted_cls = cls.fit(X_train, y_train)
-            # pred = fitted_cls.predict(X_test)
-            # score = f1_score(y_test, pred)
             fitted_models[model] = (fitted_cls, score)
-        return fitted_models
+        top_pick = sorted(fitted_models.items(), key=lambda x: x[1][1])[-1]
+        return top_pick
